@@ -9,7 +9,9 @@ https://docs.djangoproject.com/en/2.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.2/ref/settings/
 """
+from functools import partial
 
+import dj_database_url
 import django_heroku
 import os
 import sentry_sdk
@@ -83,13 +85,13 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/2.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
+default_db_url = 'sqlite:///' + os.path.join(BASE_DIR, 'db.sqlite3')
 
+parse_database = partial(dj_database_url.parse, conn_max_age=600)
+
+DATABASES = {
+    'default': config('DATABASE_URL', default=default_db_url, cast=parse_database)
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/2.2/ref/settings/#auth-password-validators
@@ -153,7 +155,7 @@ if AWS_ACCESS_KEY_ID:
     COLLECTFAST_ENABLED = True
 
     AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-    AWS_DEFAULT_ACL = 'none'
+    AWS_DEFAULT_ACL = 'private'
 
     # Static Assets
     # ----------------------------------------------------------------------------
